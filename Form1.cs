@@ -14,13 +14,18 @@ namespace App1
     {
         private Bitmap bmp;
         private List<Pixel> pointsList;
-        private List<Color> colors;
+        private List<Color> colorsList;
+        private List<Pair> lines;
+        //хешсет. переоприделить equals and hash. 1,2 и 2,1 хранить одинаково
         Random r = new Random();
+
 
         public Form1()
         {
             pointsList = new List<Pixel>();
-            colors = new List<Color>();
+            colorsList = new List<Color>();
+            lines = new List<Pair>();
+            
 
             Color firstCol = new Color();
             Color secondCol = new Color();
@@ -38,14 +43,14 @@ namespace App1
             sixthCol = Color.FromArgb(255, 179, 209, 245);
             seventhCol = Color.FromArgb(255, 243, 227, 217);
             eighthCol = Color.FromArgb(255, 87, 102, 235);
-            colors.Add(firstCol);
-            colors.Add(secondCol);
-            colors.Add(thirdCol);
-            colors.Add(fourthCol);
-            colors.Add(fifthCol);
-            colors.Add(sixthCol);
-            colors.Add(seventhCol);
-            colors.Add(eighthCol);
+            colorsList.Add(firstCol);
+            colorsList.Add(secondCol);
+            colorsList.Add(thirdCol);
+            colorsList.Add(fourthCol);
+            colorsList.Add(fifthCol);
+            colorsList.Add(sixthCol);
+            colorsList.Add(seventhCol);
+            colorsList.Add(eighthCol);
 
             InitializeComponent();
             CreateBitmapAtRuntime();
@@ -72,10 +77,12 @@ namespace App1
             Random rnd = new Random();
             int maxXvalue = bmp.Size.Width;
             int maxYvalue = bmp.Size.Height;
-            int pointsCount = rnd.Next(200, 400);
+            //int pointsCount = rnd.Next(200, 400);
+            int pointsCount = 5;
             int pointsIterator = 0;
             pointsList.Clear();
-            while(pointsIterator < pointsCount) {
+            while (pointsIterator < pointsCount)
+            {
                 int x = rnd.Next(0, maxXvalue);
                 int y = rnd.Next(0, maxYvalue);
                 pointsList.Add(new Pixel(x, y, RandCol())); //используется конструктор
@@ -94,30 +101,38 @@ namespace App1
 
         public Color RandCol()
         {
-            Color outCol = colors[r.Next(0, colors.Count)];
+            // Color outCol = colorsList[r.Next(0, colorsList.Count)];
+            Color outCol = Color.FromArgb(r.Next(256), r.Next(256), r.Next(256));
+
             return outCol;
         }
 
         public void CalcDistance()
         {
-            for (int i = 0; i < bmp.Width; i++)
+            int indexUpperPixel = -1;
+            int indexLeftPixel = -1;
+            int[] leftPix = new int[bmp.Height];//массив левых пикселей
+            int[] currentPix = new int[bmp.Height];//массив текущих пикселей
+            //текущий записываем в предыдущий
+
+            for (int i = 0; i < bmp.Width; i++) //проход по ширине
             {
-                for (int j = 0; j < bmp.Height; j++)
+                for (int j = 0; j < bmp.Height; j++) //проход по высоте
                 {
                     double minDist = 0;
                     int pointIterator = 0; //индекс для перебора всех точек
                     int indexNearestPoint = 0; //индекс точки для которой есть мин.дистанция
                     foreach (Pixel p in pointsList)
                     {
-                        if (i == p.X && j == p.Y)
+                        /*if (i == p.X && j == p.Y)
                         {
                             continue; //пропускаем места, где точки
-                        }
+                        }*/
 
                         double xVal = Math.Pow(p.X - i, 2);
                         double yVal = Math.Pow(p.Y - j, 2);
                         double dist = Math.Sqrt(xVal + yVal);
-                        
+
                         if (pointIterator == 0)
                         {
                             minDist = dist; //ставим первый dist который получили
@@ -133,12 +148,66 @@ namespace App1
                         }
                         pointIterator++;
                     }
-                    Pixel pix = pointsList[indexNearestPoint];
-                    bmp.SetPixel(i, j, pix.GetColor());
+                    Pixel currentPixel = pointsList[indexNearestPoint];
+                    bmp.SetPixel(i, j, currentPixel.GetColor());
+
+                    //заполняем связи
+                    if (i > 0)
+                    {
+                        indexLeftPixel = leftPix[j];
+                        currentPix[j] = indexNearestPoint; //при второй заполняем массив текущих пикселей
+                    }
+                    if (indexNearestPoint != indexLeftPixel && indexLeftPixel >= 0)
+                    {
+                        Pair line = new Pair(indexNearestPoint, indexLeftPixel);
+                        if (!isContainLine(line))
+                        {
+                            lines.Add(line);
+                        }
+                    }
+                    if (indexNearestPoint != indexUpperPixel && indexUpperPixel >= 0)
+                    {
+                        Pair line = new Pair(indexNearestPoint, indexUpperPixel);
+                        if (!isContainLine(line))
+                        {
+                            lines.Add(line);
+                        }
+                    }
+                    indexUpperPixel = indexNearestPoint; //ставим первый индекс для первой точки
+                    leftPix[j] = indexNearestPoint; //при первой итерации записываем элементы в левый массив
                 }
+                indexUpperPixel = -1; //обнуляем счетчик верхних индексов
             }
+            DrawLines();
             mainPictureBox.Refresh();
         }
+
+        bool isContainLine(Pair line)
+        {
+            foreach (Pair p in lines)
+            {
+                if ((p.IndexPoint1 == line.IndexPoint1 && p.IndexPoint2 == line.IndexPoint2) ||
+                   (p.IndexPoint2 == line.IndexPoint1 && p.IndexPoint1 == line.IndexPoint2))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        public void DrawLines()
+        {
+            Pen blackPen = new Pen(Color.Black, 2);
+            using (var graphics = Graphics.FromImage(bmp))
+            {
+                foreach (Pair p in lines)
+                {
+                    graphics.DrawLine(blackPen, pointsList[p.IndexPoint1].X, pointsList[p.IndexPoint1].Y,
+                                                pointsList[p.IndexPoint2].X, pointsList[p.IndexPoint2].Y);
+                }
+            }
+        }
+
+
         private void buttonGenPoints_Click(object sender, EventArgs e)
         {
             CreateBitmapAtRuntime();
