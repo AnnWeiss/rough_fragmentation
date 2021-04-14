@@ -152,17 +152,21 @@ namespace App1
                     bmp.SetPixel(i, j, currentPixel.GetColor());
 
                     //заполняем связи
+                    if (i == 0)
+                    {
+                        leftPix[j] = indexNearestPoint; //при первой итерации записываем элементы в левый массив
+                    }
                     if (i > 0)
                     {
                         indexLeftPixel = leftPix[j];
                         currentPix[j] = indexNearestPoint; //при второй заполняем массив текущих пикселей
-                    }
-                    if (indexNearestPoint != indexLeftPixel && indexLeftPixel >= 0)
-                    {
-                        Pair line = new Pair(indexNearestPoint, indexLeftPixel);
-                        if (!isContainLine(line))
+                        if (indexNearestPoint != indexLeftPixel && indexLeftPixel >= 0)
                         {
-                            lines.Add(line);
+                            Pair line = new Pair(indexNearestPoint, indexLeftPixel);
+                            if (!isContainLine(line))
+                            {
+                                lines.Add(line);
+                            }
                         }
                     }
                     if (indexNearestPoint != indexUpperPixel && indexUpperPixel >= 0)
@@ -173,10 +177,15 @@ namespace App1
                             lines.Add(line);
                         }
                     }
-                    indexUpperPixel = indexNearestPoint; //ставим первый индекс для первой точки
-                    leftPix[j] = indexNearestPoint; //при первой итерации записываем элементы в левый массив
+                    indexUpperPixel = indexNearestPoint; //ставим первый индекс для верхней точки
                 }
                 indexUpperPixel = -1; //обнуляем счетчик верхних индексов
+                if (i > 0) 
+                {
+                    Array.Clear(leftPix, 0, bmp.Height);
+                    Array.Copy(currentPix, leftPix, currentPix.Length);
+                    Array.Clear(currentPix, 0, bmp.Height);
+                }
             }
             DrawLines();
             mainPictureBox.Refresh();
@@ -205,6 +214,7 @@ namespace App1
                                                 pointsList[p.IndexPoint2].X, pointsList[p.IndexPoint2].Y);
                 }
             }
+            lines.Clear();
         }
 
 
