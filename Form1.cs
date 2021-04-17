@@ -14,20 +14,17 @@ namespace App1
     {
         private Bitmap bmp;
         private List<Pixel> pointsList;
-        private List<Color> colorsList;
-        private List<Pair> lines;
-        //хешсет. переоприделить equals and hash. 1,2 и 2,1 хранить одинаково
+        private HashSet<Pair> lines;
+        //private List<Color> colorsList;
         Random r = new Random();
-
 
         public Form1()
         {
             pointsList = new List<Pixel>();
-            colorsList = new List<Color>();
-            lines = new List<Pair>();
-            
+            lines = new HashSet<Pair>();
+            //colorsList = new List<Color>();
 
-            Color firstCol = new Color();
+            /*Color firstCol = new Color();
             Color secondCol = new Color();
             Color thirdCol = new Color();
             Color fourthCol = new Color();
@@ -50,7 +47,7 @@ namespace App1
             colorsList.Add(fifthCol);
             colorsList.Add(sixthCol);
             colorsList.Add(seventhCol);
-            colorsList.Add(eighthCol);
+            colorsList.Add(eighthCol);*/
 
             InitializeComponent();
             CreateBitmapAtRuntime();
@@ -77,8 +74,7 @@ namespace App1
             Random rnd = new Random();
             int maxXvalue = bmp.Size.Width;
             int maxYvalue = bmp.Size.Height;
-            //int pointsCount = rnd.Next(200, 400);
-            int pointsCount = 5;
+            int pointsCount = 30;
             int pointsIterator = 0;
             pointsList.Clear();
             while (pointsIterator < pointsCount)
@@ -115,20 +111,15 @@ namespace App1
             int[] currentPix = new int[bmp.Height];//массив текущих пикселей
             //текущий записываем в предыдущий
 
-            for (int i = 0; i < bmp.Width; i++) //проход по ширине
+            for (int i = 0; i < bmp.Width; i++)
             {
-                for (int j = 0; j < bmp.Height; j++) //проход по высоте
+                for (int j = 0; j < bmp.Height; j++)
                 {
                     double minDist = 0;
                     int pointIterator = 0; //индекс для перебора всех точек
                     int indexNearestPoint = 0; //индекс точки для которой есть мин.дистанция
                     foreach (Pixel p in pointsList)
                     {
-                        /*if (i == p.X && j == p.Y)
-                        {
-                            continue; //пропускаем места, где точки
-                        }*/
-
                         double xVal = Math.Pow(p.X - i, 2);
                         double yVal = Math.Pow(p.Y - j, 2);
                         double dist = Math.Sqrt(xVal + yVal);
@@ -163,24 +154,18 @@ namespace App1
                         if (indexNearestPoint != indexLeftPixel && indexLeftPixel >= 0)
                         {
                             Pair line = new Pair(indexNearestPoint, indexLeftPixel);
-                            if (!isContainLine(line))
-                            {
-                                lines.Add(line);
-                            }
+                            lines.Add(line);
                         }
                     }
                     if (indexNearestPoint != indexUpperPixel && indexUpperPixel >= 0)
                     {
                         Pair line = new Pair(indexNearestPoint, indexUpperPixel);
-                        if (!isContainLine(line))
-                        {
-                            lines.Add(line);
-                        }
+                        lines.Add(line);
                     }
                     indexUpperPixel = indexNearestPoint; //ставим первый индекс для верхней точки
                 }
                 indexUpperPixel = -1; //обнуляем счетчик верхних индексов
-                if (i > 0) 
+                if (i > 0)
                 {
                     Array.Clear(leftPix, 0, bmp.Height);
                     Array.Copy(currentPix, leftPix, currentPix.Length);
@@ -190,22 +175,9 @@ namespace App1
             DrawLines();
             mainPictureBox.Refresh();
         }
-
-        bool isContainLine(Pair line)
-        {
-            foreach (Pair p in lines)
-            {
-                if ((p.IndexPoint1 == line.IndexPoint1 && p.IndexPoint2 == line.IndexPoint2) ||
-                   (p.IndexPoint2 == line.IndexPoint1 && p.IndexPoint1 == line.IndexPoint2))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
         public void DrawLines()
         {
-            Pen blackPen = new Pen(Color.Black, 2);
+            Pen blackPen = new Pen(Color.Black, 1);
             using (var graphics = Graphics.FromImage(bmp))
             {
                 foreach (Pair p in lines)

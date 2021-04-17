@@ -7,7 +7,7 @@ using System.Drawing;
 
 namespace App1
 {
-    class Pair
+    class Pair : IEquatable<Pair>
     {
         public int IndexPoint1 { get; set; }
         public int IndexPoint2 { get; set; }
@@ -18,7 +18,27 @@ namespace App1
             IndexPoint2 = p2;
         }
 
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as Pair);
+        }
 
+        public bool Equals(Pair other)
+        {
+            return other != null &&
+                   (IndexPoint1 == other.IndexPoint1 &&
+                   IndexPoint2 == other.IndexPoint2) ||
+                   (IndexPoint1 == other.IndexPoint2 &&
+                   IndexPoint2 == other.IndexPoint1);
+        }
+
+        public override int GetHashCode()
+        {
+            int hashCode = -1555726615;
+            hashCode = hashCode * -1521134295 + IndexPoint1.GetHashCode();
+            hashCode = hashCode * -1521134295 + IndexPoint2.GetHashCode();
+            return hashCode;
+        }
     }
 
     
