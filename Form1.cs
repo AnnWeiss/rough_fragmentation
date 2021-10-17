@@ -13,46 +13,15 @@ namespace App1
     public partial class Form1 : Form
     {
         private Bitmap bmp;
-        private List<Pixel> pointsList;
-        private HashSet<Pair> lines;
-        //private List<Color> colorsList;
-        Random r = new Random();
+        private List<Pixel> pointsList = new List<Pixel>();
+        private HashSet<Pair> lines = new HashSet<Pair>();
+        Random rnd = new Random();
 
         public Form1()
         {
-            pointsList = new List<Pixel>();
-            lines = new HashSet<Pair>();
-            //colorsList = new List<Color>();
-
-            /*Color firstCol = new Color();
-            Color secondCol = new Color();
-            Color thirdCol = new Color();
-            Color fourthCol = new Color();
-            Color fifthCol = new Color();
-            Color sixthCol = new Color();
-            Color seventhCol = new Color();
-            Color eighthCol = new Color();
-            firstCol = Color.FromArgb(255, 60, 167, 251);
-            secondCol = Color.FromArgb(255, 201, 134, 243);
-            thirdCol = Color.FromArgb(255, 23, 239, 209);
-            fourthCol = Color.FromArgb(255, 73, 254, 246);
-            fifthCol = Color.FromArgb(255, 251, 149, 225);
-            sixthCol = Color.FromArgb(255, 179, 209, 245);
-            seventhCol = Color.FromArgb(255, 243, 227, 217);
-            eighthCol = Color.FromArgb(255, 87, 102, 235);
-            colorsList.Add(firstCol);
-            colorsList.Add(secondCol);
-            colorsList.Add(thirdCol);
-            colorsList.Add(fourthCol);
-            colorsList.Add(fifthCol);
-            colorsList.Add(sixthCol);
-            colorsList.Add(seventhCol);
-            colorsList.Add(eighthCol);*/
-
             InitializeComponent();
             CreateBitmapAtRuntime();
-            GeneratePoints();
-
+            //GeneratePoints();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -71,10 +40,13 @@ namespace App1
 
         public void GeneratePoints()
         {
-            Random rnd = new Random();
             int maxXvalue = bmp.Size.Width;
             int maxYvalue = bmp.Size.Height;
-            int pointsCount = 30;
+            int pointsCount = Convert.ToInt32(textBox1.Text);
+            if (pointsCount <= 0 || pointsCount > 1000)
+            {
+                MessageBox.Show("Введите число от 1 до 1000");
+            }
             int pointsIterator = 0;
             pointsList.Clear();
             while (pointsIterator < pointsCount)
@@ -84,27 +56,29 @@ namespace App1
                 pointsList.Add(new Pixel(x, y, RandCol())); //используется конструктор
                 pointsIterator++;
             }
-            DrawRandomPoints();
         }
 
         public void DrawRandomPoints()
         {
+            Graphics flagGraphics = Graphics.FromImage(bmp);
             foreach (Pixel p in pointsList)
             {
-                bmp.SetPixel(p.X, p.Y, p.GetColor());
+                flagGraphics.FillEllipse(Brushes.Red, p.X - 2, p.Y - 2, 2, 2);
             }
         }
 
         public Color RandCol()
         {
-            // Color outCol = colorsList[r.Next(0, colorsList.Count)];
-            Color outCol = Color.FromArgb(r.Next(256), r.Next(256), r.Next(256));
-
+            Color outCol = Color.FromArgb(rnd.Next(256), rnd.Next(256), rnd.Next(256));
             return outCol;
         }
 
         public void CalcDistance()
         {
+            if (pointsList.Count == 0)
+            {
+                MessageBox.Show("Сгенерируйте кол-во точек от 1 до 1000!");
+            }
             int indexUpperPixel = -1;
             int indexLeftPixel = -1;
             int[] leftPix = new int[bmp.Height];//массив левых пикселей
@@ -161,6 +135,7 @@ namespace App1
                     {
                         Pair line = new Pair(indexNearestPoint, indexUpperPixel);
                         lines.Add(line);
+                        
                     }
                     indexUpperPixel = indexNearestPoint; //ставим первый индекс для верхней точки
                 }
@@ -172,8 +147,6 @@ namespace App1
                     Array.Clear(currentPix, 0, bmp.Height);
                 }
             }
-            DrawLines();
-            mainPictureBox.Refresh();
         }
         public void DrawLines()
         {
@@ -189,16 +162,25 @@ namespace App1
             lines.Clear();
         }
 
-
+       
         private void buttonGenPoints_Click(object sender, EventArgs e)
         {
             CreateBitmapAtRuntime();
             GeneratePoints();
+            DrawRandomPoints();
+            
         }
 
         private void buttonCalc_Click(object sender, EventArgs e)
         {
             CalcDistance();
+            DrawLines();
+            mainPictureBox.Refresh();
+        }
+
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }
